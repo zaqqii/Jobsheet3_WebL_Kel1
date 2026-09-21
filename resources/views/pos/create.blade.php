@@ -16,14 +16,17 @@
 }">
     <div class="grid grid-cols-3 gap-4">
         @foreach ($products as $product)
-            <div
-                class="border rounded-md p-3 cursor-pointer"
-                @click="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->price }})"
-            >
-                <p class="font-medium">{{ $product->name }}</p>
-                <p class="text-sm text-slate-500">
-                    Rp {{ number_format($product->price) }}
-                </p>
+            <div class="border rounded-md p-3 cursor-pointer"
+                @click="addToCart({{ $product->id }}, '{{ $product->name }}', {{ $product->price }})">
+                <div class="flex justify-between items-start">
+                    <p class="font-medium">{{ $product->name }}</p>
+                    @if ($product->stock < 10)
+                        <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
+                            Stok Menipis
+                        </span>
+                    @endif
+                </div>
+                <p class="text-sm text-slate-500">Rp {{ number_format($product->price) }}</p>
             </div>
         @endforeach
     </div>
