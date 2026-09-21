@@ -12,6 +12,9 @@
     removeFromCart(id) {
         this.cart = this.cart.filter(item => item.id !== id);
     },
+    removeFromCart(index) {
+        this.cart.splice(index, 1);
+    },
     subtotal() {
         return this.cart.reduce((sum, item) => sum + item.price, 0);
     }
