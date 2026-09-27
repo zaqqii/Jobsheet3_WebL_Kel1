@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('transaction_details', function (Blueprint $table) {
-            $table->index('product_id');
+        Schema::table('products', function (Blueprint $table) {
+             $table->boolean('is_active')->default(true);
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('transaction_details', function (Blueprint $table) {
-            $table->dropIndex(['product_id']);
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('is_active');
         });
     }
 };
