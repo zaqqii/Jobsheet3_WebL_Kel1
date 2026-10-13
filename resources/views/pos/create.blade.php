@@ -17,14 +17,19 @@
     cart: [],
     selectedId: null,
     addToCart(id, name, price) {
-        this.cart.push({ id, name, price });
+        let existing = this.cart.find(item => item.id === id);
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            this.cart.push({ id, name, price, qty: 1 });
+        }
         this.selectedId = id;
     },
     removeFromCart(index) {
         this.cart.splice(index, 1);
     },
     subtotal() {
-        return this.cart.reduce((sum, item) => sum + item.price, 0);
+        return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     }
 }">
     @csrf
@@ -46,14 +51,14 @@
 
     <div class="mt-4 border-t pt-3">
         <template x-for="(item, index) in cart" :key="index">
-            <div class="flex justify-between items-center">
-                <p x-text="item.name + ' - Rp ' + item.price"></p>
+            <div class="flex justify-between items-center mb-2">
+                <p x-text="item.name + ' (x' + item.qty + ') - Rp ' + (item.price * item.qty)"></p>
                 <button type="button"
                         class="text-red-600 text-sm hover:underline"
                         @click="removeFromCart(index)">Hapus</button>
 
                 <input type="hidden" :name="'items[' + index + '][product_id]'" :value="item.id">
-                <input type="hidden" :name="'items[' + index + '][qty]'" value="1">
+                <input type="hidden" :name="'items[' + index + '][qty]'" :value="item.qty">
             </div>
         </template>
 
