@@ -6,11 +6,11 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('pos.create');
-});
-
 Route::middleware('guest')->group(function () {
+    Route::get('/', function () {
+        return view('info'); 
+    })->name('home');
+
     Route::get('/login', [LoginController::class, 'create'])->name('login');
     Route::post('/login', [LoginController::class, 'store']);
 });
