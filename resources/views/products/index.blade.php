@@ -43,4 +43,14 @@
     <div class="mt-4">
         {{ $products->links() }}
     </div>
+
+    <form action="{{ route('products.import') }}" method="POST" enctype="multipart/form-data" class="mb-4">
+        @csrf
+        <div class="flex items-center space-x-2">
+            <input type="file" name="file" accept=".xlsx, .xls, .csv" required class="border p-2 rounded-md text-sm">
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
+                Import Data
+            </button>
+        </div>
+    </form>
 @endsection
