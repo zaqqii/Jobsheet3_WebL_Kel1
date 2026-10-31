@@ -28,7 +28,7 @@ class SalesReportExport implements FromQuery, WithHeadings, WithMapping, ShouldA
             $transaction->id,
             $transaction->created_at->format('Y-m-d H:i:s'),
             $transaction->user->name,
-            $transaction->total,
+            $transaction->filtered_total ?? $transaction->total,
         ];
     }
 }

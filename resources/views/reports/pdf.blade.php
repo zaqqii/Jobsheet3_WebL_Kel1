@@ -15,6 +15,7 @@
     <div class="header">
         <h2>Laporan Penjualan</h2>
         <p>Periode: {{ $from }} sampai {{ $to }}</p>
+        <p>Kategori: {{ $category ?? 'Semua kategori' }}</p>
     </div>
 
     <table>
@@ -32,7 +33,7 @@
                 <td>{{ $t->id }}</td>
                 <td>{{ $t->created_at }}</td>
                 <td>{{ $t->user->name }}</td>
-                <td>Rp {{ number_format($t->total, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($t->filtered_total ?? $t->total, 0, ',', '.') }}</td>
             </tr>
             @endforeach
         </tbody>
