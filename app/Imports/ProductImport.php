@@ -5,16 +5,23 @@ namespace App\Imports;
 use App\Models\Product;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 
-class ProductImport implements ToModel, WithHeadingRow
+class ProductImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     public function model(array $row)
     {
-        return new Product([
-            'name'  => $row['nama_produk'],
-            'price' => $row['harga'],
-            'stock' => $row['stok'],
-            'category_id' => 1,
-        ]);
+        return Product::updateOrCreate(
+            ['name' => $row['name']],
+            [
+                'category_id' => $row['category_id'],
+                'price' => $row['price'],
+            ]
+        );
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000; // Membaca 1000 baris per proses untuk efisiensi memori
     }
 }
