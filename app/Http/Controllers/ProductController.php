@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ImportError;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\ProductImport;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -51,14 +52,76 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil diperbarui.');
     }
 
-    public function import(Request $request)
+    public function import(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv',
+            'csv' => ['required', 'file', 'mimes:csv,txt'],
         ]);
 
-        Excel::import(new ProductImport, $request->file('file'));
+        ImportError::query()->delete();
 
-        return redirect()->back()->with('success', 'Data produk berhasil di-import!');
+        $lines = file(
+            $request->file('csv')->getRealPath(),
+            FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES
+        );
+
+        $rows = array_map('str_getcsv', $lines);
+        $header = array_map('trim', array_shift($rows));
+
+        $created = 0;
+        $updated = 0;
+
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 2;
+
+            if (count($row) !== count($header)) {
+                ImportError::create([
+                    'row_number' => $rowNumber,
+                    'error_message' => 'Jumlah kolom tidak sesuai',
+                ]);
+
+                continue;
+            }
+
+            $validator = Validator::make(
+                array_combine($header, $row),
+                [
+                    'name' => ['required', 'string'],
+                    'category_id' => ['required', 'exists:categories,id'],
+                    'price' => ['required', 'integer', 'min:0'],
+                ]
+            );
+
+            if ($validator->fails()) {
+                ImportError::create([
+                    'row_number' => $rowNumber,
+                    'error_message' => implode(
+                        ', ',
+                        $validator->errors()->all()
+                    ),
+                ]);
+
+                continue;
+            }
+
+            $data = $validator->validated();
+
+            $product = Product::updateOrCreate(
+                [
+                    'name' => $data['name'],
+                    'category_id' => $data['category_id'],
+                ],
+                [
+                    'price' => $data['price'],
+                ]
+            );
+
+            $product->wasRecentlyCreated ? $created++ : $updated++;
+        }
+
+        return back()->with(
+            'success',
+            "{$created} produk baru, {$updated} diperbarui."
+        );
     }
 }
