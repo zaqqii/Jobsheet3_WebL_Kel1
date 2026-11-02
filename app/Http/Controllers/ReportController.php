@@ -83,6 +83,7 @@ class ReportController extends Controller
             'from' => $from->toDateString(),
             'to' => $to->toDateString(),
             'category' => $categoryId ? Category::find($categoryId)?->name : null,
+            'topProducts' => $this->topProducts($from, $to, $categoryId), // BARU: tabel produk terlaris
         ]);
 
         return $pdf->download('laporan-penjualan.pdf');
@@ -158,5 +159,21 @@ class ReportController extends Controller
             ->whereHas('product', fn (Builder $products) => $products
                 ->where('category_id', $categoryId))
             ->sum('subtotal');
+    }
+
+    // BARU: 10 produk terlaris, dijumlahkan di database dan mengikuti filter tanggal + kategori
+    private function topProducts($from, $to, ?int $categoryId)
+    {
+        return TransactionDetail::query()
+            ->join('transactions', 'transactions.id', '=', 'transaction_details.transaction_id')
+            ->join('products', 'products.id', '=', 'transaction_details.product_id')
+            ->whereBetween('transactions.created_at', [$from, $to])
+            ->when($categoryId !== null, fn ($query) => $query->where('products.category_id', $categoryId))
+            ->groupBy('products.id', 'products.name')
+            ->selectRaw('products.name, SUM(transaction_details.qty) as total_qty, SUM(transaction_details.subtotal) as total_penjualan')
+            ->orderByDesc('total_qty')
+            ->orderBy('products.name')
+            ->limit(10)
+            ->get();
     }
 }
