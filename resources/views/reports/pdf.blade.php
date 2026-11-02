@@ -41,5 +41,30 @@
 
     <h4 style="margin-top: 20px;">Total Penjualan: Rp {{ number_format($totalPenjualan, 0, ',', '.') }}</h4>
     <p>Jumlah Transaksi: {{ $jumlahTransaksi }} transaksi</p>
+
+    {{-- BARU: tabel 10 produk terlaris --}}
+    <h4 style="margin-top: 20px;">10 Produk Terlaris</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Produk</th>
+                <th>Terjual (unit)</th>
+                <th>Total Penjualan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($topProducts as $p)
+            <tr>
+                <td>{{ $p->name }}</td>
+                <td>{{ number_format($p->total_qty, 0, ',', '.') }}</td>
+                <td>Rp {{ number_format($p->total_penjualan, 0, ',', '.') }}</td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="3">Tidak ada penjualan pada periode ini.</td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
 </body>
 </html>
