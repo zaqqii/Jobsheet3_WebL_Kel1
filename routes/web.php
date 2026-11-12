@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\QuickCategoryController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/', function () {
@@ -34,7 +35,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         // Route untuk menampilkan halaman form import & tabel error
         Route::get('/reports/import', [ReportController::class, 'importForm'])->name('reports.import');
-        
         Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+        Route::get('/quick-categories', [QuickCategoryController::class, 'index'])->name('quick-categories.index');
+        Route::post('/quick-categories', [QuickCategoryController::class, 'store'])->name('quick-categories.store');
     });
 });
