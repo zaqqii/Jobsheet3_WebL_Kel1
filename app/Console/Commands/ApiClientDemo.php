@@ -4,7 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Product;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class ApiClientDemo extends Command
 {
@@ -29,6 +31,13 @@ class ApiClientDemo extends Command
     {
         $baseUrl = 'http://127.0.0.1:8000';
 
+        // hanya error yang layak diulang: gangguan koneksi, 429, 502, 503, 504
+        $when = fn ($e) => $e instanceof ConnectionException
+            || in_array($e->response->status(), [429, 502, 503, 504]);
+
+        // jeda makin panjang: 1 detik, 2 detik, 3 detik
+        $backoff = fn (int $attempt) => $attempt * 1000;
+
         $login = Http::acceptJson()->post("{$baseUrl}/api/login", [
             'email' => 'kasir@pos.test',
             'password' => 'password',
@@ -42,7 +51,10 @@ class ApiClientDemo extends Command
         $token = $login->json('token');
         $this->info("Login berhasil, token: {$token}");
 
-        $products = Http::acceptJson()->withToken($token)->get("{$baseUrl}/api/products");
+        $products = Http::acceptJson()
+            ->withToken($token)
+            ->retry(3, $backoff, $when, throw: false)
+            ->get("{$baseUrl}/api/products");
 
         if ($products->failed()) {
             $this->error('Token kedaluwarsa/dicabut, atau server sedang bermasalah.');
@@ -53,9 +65,16 @@ class ApiClientDemo extends Command
 
         $productId = Product::first()->id;
 
-        $transaction = Http::acceptJson()->withToken($token)->post("{$baseUrl}/api/transactions", [
-            'items' => [['product_id' => $productId, 'qty' => 1]],
-        ]);
+        $payload = ['items' => [['product_id' => $productId, 'qty' => 1]]];
+
+        // UUID dibuat SEKALI per aksi, lalu dipakai ulang saat retry
+        $key = (string) Str::uuid();
+
+        $transaction = Http::acceptJson()
+            ->withToken($token)
+            ->withHeaders(['Idempotency-Key' => $key])
+            ->retry(3, $backoff, $when, throw: false)
+            ->post("{$baseUrl}/api/transactions", $payload);
 
         match ($transaction->status()) {
             201 => $this->info('Transaksi tersimpan: ' . json_encode($transaction->json('data'))),
@@ -63,6 +82,20 @@ class ApiClientDemo extends Command
             422 => $this->error('Input ditolak: ' . $transaction->json('message')),
             default => $this->error('Error lain: ' . $transaction->status()),
         };
+
+        // simulasi retry setelah timeout: request sama, key SAMA
+        $retry = Http::acceptJson()
+            ->withToken($token)
+            ->withHeaders(['Idempotency-Key' => $key])
+            ->retry(3, $backoff, $when, throw: false)
+            ->post("{$baseUrl}/api/transactions", $payload);
+
+        $this->info(
+            'Ulang dengan key yang sama: ' .
+            $retry->status() .
+            ', replayed = ' .
+            $retry->header('Idempotent-Replayed')
+        );
 
         return self::SUCCESS;
     }
