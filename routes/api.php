@@ -7,6 +7,7 @@ use App\Http\Resources\CategoryResource;
 use App\Models\Category;
 use Illuminate\Support\Facades\Route;
 
+Route::prefix('v1')->group(function () {
 Route::post('/login', [AuthController::class, 'login'])
     ->middleware('throttle:login');
 
@@ -23,6 +24,8 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         ->middleware('abilities:transactions:read');
 });
 
+
 Route::get('/categories', function () {
     return CategoryResource::collection(Category::all());
+});
 });
