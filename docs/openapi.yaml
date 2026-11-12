@@ -36,6 +36,21 @@ paths:
       summary: Ambil daftar produk
       security:
         - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Nomor halaman untuk paginasi data
+          required: false
+          schema:
+            type: integer
+            example: 1
+        - name: per_page
+          in: query
+          description: Jumlah data produk per halaman
+          required: false
+          schema:
+            type: integer
+            example: 10
       responses:
         '200':
           description: Daftar produk
