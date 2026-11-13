@@ -31,6 +31,8 @@ class ApiClientDemo extends Command
     {
         $baseUrl = 'http://127.0.0.1:8000';
 
+        $this->comment('Langkah 1: mencoba login dengan kata sandi yang sengaja salah.');
+
         // hanya error yang layak diulang: gangguan koneksi, 429, 502, 503, 504
         $when = fn ($e) => $e instanceof ConnectionException
             || in_array($e->response->status(), [429, 502, 503, 504]);
@@ -40,11 +42,12 @@ class ApiClientDemo extends Command
 
         $login = Http::acceptJson()->post("{$baseUrl}/api/v1/login", [
             'email' => 'kasir@pos.test',
-            'password' => 'password',
+            'password' => 'kata-sandi-salah',
         ]);
 
         if ($login->failed()) {
-            $this->error('Login gagal: ' . $login->json('message'));
+            $this->error('Login gagal pada langkah pertama (HTTP ' . $login->status() . '): ' . $login->json('message'));
+            $this->line('Alur dihentikan; token tidak dibaca atau digunakan.');
             return self::FAILURE;
         }
 
