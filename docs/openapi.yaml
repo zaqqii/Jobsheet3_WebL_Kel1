@@ -1,3 +1,4 @@
+# Catatan pengalaman pengujian: Saat menguji endpoint /api/v1/login, /api/v1/products, dan /api/v1/transactions melalui Postman atau Insomnia, prosesnya terasa jauh lebih nyaman karena panel body, headers, dan authorization bisa diatur secara visual tanpa perlu mengingat flag seperti -X, -H, dan -d. Dengan curl, langkah pengujian terasa lebih rawan typo dan kurang efisien karena kita harus menulis request secara manual setiap kali, terutama saat menangani token bearer dan header Idempotency-Key untuk transaksi; di sisi lain, Postman/Insomnia memudahkan pengecekan status code, body respons, dan debugging regresi dalam satu tampilan yang lebih rapi dan terstruktur.
 openapi: 3.0.0
 info:
   title: Simple POS API
@@ -15,7 +16,7 @@ paths:
                 email: { type: string }
                 password: { type: string }
       responses:
-        '200':
+        "200":
           description: Token berhasil diterbitkan
           content:
             application/json:
@@ -23,7 +24,7 @@ paths:
                 type: object
                 properties:
                   token: { type: string }
-        '401':
+        "401":
           description: Kredensial tidak valid
           content:
             application/json:
@@ -52,7 +53,7 @@ paths:
             type: integer
             example: 10
       responses:
-        '200':
+        "200":
           description: Daftar produk
           content:
             application/json:
@@ -68,7 +69,7 @@ paths:
                         name: { type: string }
                         price: { type: integer }
                         category: { type: string }
-        '401':
+        "401":
           description: Token tidak ada atau tidak valid
   /api/v1/transactions:
     post:
@@ -89,7 +90,7 @@ paths:
                       product_id: { type: integer }
                       qty: { type: integer }
       responses:
-        '201':
+        "201":
           description: Transaksi berhasil disimpan
           content:
             application/json:
@@ -101,9 +102,9 @@ paths:
                     properties:
                       id: { type: integer }
                       total: { type: integer }
-        '401':
+        "401":
           description: Token tidak ada atau tidak valid
-        '422':
+        "422":
           description: Input tidak valid, misalnya product_id tidak ditemukan
 components:
   securitySchemes:
